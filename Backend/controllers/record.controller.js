@@ -15,7 +15,7 @@ export const createRecord=async(req,res)=>{
       note,
       user: req.user.id  
     });
-        await record.save();
+      
         res.status(201).json({message:"Record created successfully"});
     }
     catch(error){
@@ -67,3 +67,36 @@ export const getRecords=async(req,res)=>{
     }
 }
  
+export const updateRecord=async(req,res)=>{
+   try {
+     const id=req.params.id;
+     if(!id){
+        return res.status(400).json({message:"Record ID is required"});
+     }
+     const record=await Record.findByIdAndUpdate(id,req.body,{new:true});
+     if(!record){
+        return res.status(404).json({message:"Record not found"});
+     }
+   } catch (error) {
+        res.status(500).json({message:"Internal server error"});
+   }
+
+}
+
+export const deleteRecord=async(req,res)=>{
+    try {
+        const id=req.params.id;
+        const record=await Record.findById(id);
+        if(!record){
+            return res.status(404).json({message:"Record not found"});
+        }
+                if (req.user.role !== "admin" && record.user.toString() !== req.user.id) {
+                return res.status(403).json({ msg: "Not allowed" });
+                }
+        record.isDeleted=true;
+        await record.save();
+        res.json({message:"Record deleted successfully"});
+    } catch (error) {
+         res.status(500).json({message:"Internal server error"});
+    }
+}
